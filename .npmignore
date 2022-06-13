@@ -8,3 +8,4 @@ vite.config.ts
 yarn.lock
 .eslintrc.js
 src/example
+.vscode
