@@ -1,0 +1,10 @@
+node_modules
+.DS_Store
+*.local
+.prettierrc
+package-lock.json
+tsconfig.json
+vite.config.ts
+yarn.lock
+.eslintrc.js
+src/example
