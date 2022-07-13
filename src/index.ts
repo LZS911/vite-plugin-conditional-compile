@@ -32,12 +32,12 @@ export const replaceMatched = (js: string, userOptions: Options): string => {
     //_: 匹配到的所有字符
     //$1:  注释的开头内容
     //$2: 被注释包含的内容, 即代码部分
-
+    const matchStr = $1.slice(5);
     let isKeep = false;
-    if ($1 === 'DEBUG') {
+    if (matchStr === 'isDebug') {
       isKeep = userOptions.isDebug!;
     } else {
-      isKeep = !!userOptions.expand?.[$1.slice(5)];
+      isKeep = !!userOptions.expand?.[matchStr];
     }
 
     // 当与当前模式匹配上时保留代码部分, 否则替换为空字符串
