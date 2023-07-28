@@ -26,7 +26,7 @@ const vitePluginConditionalCompile: (userOptions: Options) => Plugin = (userOpti
   };
 };
 
-export const replaceMatched = (js: string, userOptions: Options): string => {
+const replaceMatched = (js: string, userOptions: Options): string => {
   const REG = /\/\*\s*IF(DEBUG|TRUE_\w+)(?:\s*\*\/)?([\s\S]+?)(?:\/\*\s*)?FI\1\s*\*\//g;
   return js.replace(REG, (_, $1, $2) => {
     //_: 匹配到的所有字符
