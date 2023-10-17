@@ -41,7 +41,7 @@ const replaceMatched = (js: string, userOptions: Options): string => {
     }
 
     // 当与当前模式匹配上时保留代码部分, 否则替换为空字符串
-    return isKeep ? $2 : '';
+    return isKeep ? replaceMatched($2, userOptions) : '';
   });
 };
 
