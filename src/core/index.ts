@@ -23,6 +23,11 @@ class Context {
   private code: string = '';
   private id: string = '';
 
+  public pattern_reg =
+    /(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*if\s\[([\w!=&|()'"\s]+)\]\s*(?:\*\/\s*\}?|-->)?([\s\S]+?)(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*endif\s*(?:\*\/\s*\}?|-->)?/g;
+
+  public match_group_reg =
+    /.*(#\s*(?:if|elif|else|endif))\s?(?:\[([\w !=&|()'"]*)\])*(?:\s*\*\/\s*\}|\s*-->)?/g;
   constructor(userOptions: Options) {
     this.ctx = userOptions;
   }
@@ -43,7 +48,7 @@ class Context {
     try {
       if (node.type === 'BinaryExpression') {
         const { left, operator, right } = node;
-        if (left.type === 'Identifier' && ['==', '!=='].includes(operator)) {
+        if (left.type === 'Identifier' && ['==', '!='].includes(operator)) {
           if (right.type === 'Identifier') {
             if (operator === '==') {
               return this.ctx.env?.[left.name] == right.name;
@@ -76,10 +81,13 @@ class Context {
       if (node.type === 'UnaryExpression') {
         if (node.operator === '!') {
           if (node.argument.type === 'Identifier') {
-            return this.ctx.env?.[node.argument.name] === false;
+            return !this.ctx.env?.[node.argument.name];
           }
           if (node.argument.type === 'UnaryExpression') {
-            return this.evaluate_ast(node.argument);
+            return !this.evaluate_ast(node.argument);
+          }
+          if (node.argument.type === 'BinaryExpression') {
+            return !this.evaluate_ast(node.argument);
           }
           logger.error(
             `evaluate ast error: This expression is not supported: ${node.type}:${node.operator}`,
@@ -147,13 +155,8 @@ class Context {
   }
 
   public resolve_comment() {
-    const pattern_reg =
-      /(?:\/\/|\{?\/\*)\s*#\s*if\s\[([\w!=&|()'"\s]+)\](?:\s*\*\/\}?)?([\s\S]+?)(?:\/\/|\{?\/\*)\s*#\s*endif(?:\s*\*\/\}?)?/g;
-
-    return this.code.replace(pattern_reg, (matchCode) => {
-      const match_group_reg =
-        /.*(#\s*(?:if|elif|else|endif))\s?(?:\[([\w !=&|()'"]*)\])*(?:\s*\*\/\s*\})?/g;
-      const codeBlocks = matchCode.split(match_group_reg).filter((v) => v !== '');
+    return this.code.replace(this.pattern_reg, (matchCode) => {
+      const codeBlocks = matchCode.split(this.match_group_reg).filter((v) => v !== '');
       while (codeBlocks.length) {
         const [flag, conditional, block] = codeBlocks.splice(0, 3);
         const real_flag = flag.replace(/\s/g, '');

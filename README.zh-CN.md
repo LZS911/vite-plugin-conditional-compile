@@ -15,7 +15,7 @@
 ## 安装
 
 ```ssh
-yarn add  vite-plugin-conditional-compile -D
+yarn add vite-plugin-conditional-compile -D
 ```
 
 ## 使用
@@ -41,7 +41,11 @@ export default defineConfig({
 该插件支持以下配置项：
 
 1. `include: string | RegExp | readonly (string | RegExp)[] | null`
-   需要进行条件编译的文件路径或文件匹配模式。示例：
+   需要进行条件编译的文件路径或文件匹配模式。
+
+   默认值: `['**/*']`
+
+   示例：
 
    ```js
       {
@@ -50,11 +54,15 @@ export default defineConfig({
    ```
 
 2. `exclude: string | RegExp | readonly (string | RegExp)[] | null`
-   需要排除条件编译的文件路径或文件匹配模式。示例：
+   需要排除条件编译的文件路径或文件匹配模式。
+
+   默认值: `[/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/]`
+
+   示例：
 
    ```js
       {
-         exclude: ['**/node_modules/**']
+         exclude: ['/\.eslintrc.js/']
       }
    ```
 
@@ -80,6 +88,7 @@ import vitePluginConditionalCompile from "vite-plugin-conditional-compile";
 export default defineConfig({
     plugins: [vitePluginConditionalCompile({
       env:{
+        //自定义环境变量, 提供给条件语句使用
         feature: 'code',
         prod_version: 'vite'
       }
@@ -92,9 +101,11 @@ export default defineConfig({
 // #if [DEV]
 import { featureA } from './featureA.js';
 
+// 这里的 PROD 取至 项目的环境变量, 若当前为生产环境时将加载此条 import 语句
 // #elif [PROD]
 import { featureB } from './featureB.js';
 
+//这里的 feature 和 prod_version 取至用户的 env 配置项, 判断 feature 的值是否与 ”code“ 相同、prod_version的值是否不等于 ”vite“. 当满足其中之一时, 该条件成立
 // #elif [feature=code || !(prod_version=vite)]
 import { featureC } from './featureC.js';
 
@@ -140,7 +151,7 @@ return (
 2. 不等式: `prod_version != vite`。
 3. 逻辑语句: `feature=code || !(prod_version=vite)` 支持嵌套逻辑语句。
 4. 变量: `DEV` 判断 env['DEV'] 的值是否为 true。
-5. 取反符号: `!PROD` 判断 env['PROD'] 的值是否为 false，可以使用双重去反来模拟 #ifdef。
+5. 取反符号: `!PROD` 判断 env['PROD'] 的值是否为 false，可以使用双重取反来模拟 #ifdef。
 
 ## VS Code 插件
 

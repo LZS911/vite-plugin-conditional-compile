@@ -28,6 +28,74 @@ export const mock_txt_1 = `
   BBBBBBB
 `;
 
+export const mock_match_txt_1 = `
+AAAAAA
+// # if [dev]
+if block
+// #else
+else block
+else block
+// #endif
+BBBBBBB
+`;
+
+export const mock_match_txt_2 = `
+AAAAAA
+// # if dev
+if block
+// #else
+else block
+// #endif
+BBBBBBB
+`;
+
+export const mock_match_txt_3 = `
+AAAAAA
+/* # if [dev] */
+if block
+// #else
+else block
+else block
+// #endif
+BBBBBBB
+`;
+
+export const mock_match_txt_4 = `
+AAAAAA
+/* # if [dev=123;] */
+if block
+// #else
+else block
+else block
+// #endif
+BBBBBBB
+`;
+
+export const mock_match_txt_5 = `
+AAAAAA
+// # if [dev]
+if block
+{/* #elif [prod]*/}
+else block
+{ /* # elif [prod] */ }
+else block
+{/*#endif*/}
+// #endif
+BBBBBBB
+`;
+
+export const mock_match_txt_6 = `
+AAAAAA
+<!-- #if [!dev] -->
+<span>if block</span>
+ <!-- #elif [!prod] -->
+<span>elif block</span>
+<!-- #else*/ -->
+<span>else block</span>
+ <!-- #endif  -->
+BBBBBBB
+`;
+
 export const mock_condition_txt = `
   AAAAAA
   //#if [dev && feature=12]
@@ -96,4 +164,26 @@ export const mock_condition_txt_6 = `
   else block
   {/* #endif */}
   BBBBBBB
+`;
+
+export const mock_condition_txt_7 = `
+AAAAAA
+//#if [feature!=cond]
+ifdef block
+//#else
+else block
+{/* #endif */}
+BBBBBBB
+`;
+
+export const mock_condition_txt_8 = `
+AAAAAA
+<!-- #if [!dev] -->
+<span>if block</span>
+ <!-- #elif [!prod] -->
+<span>elif block</span>
+<!-- #else*/ -->
+<span>else block</span>
+ <!-- #endif  -->
+BBBBBBB
 `;

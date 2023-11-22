@@ -14,7 +14,7 @@ English | [简体中文](./README.zh-CN.md) | [1.3.x旧版本](./README.OLD.md)
 ## Installation
 
 ```ssh
-yarn add  vite-plugin-conditional-compile -D
+yarn add vite-plugin-conditional-compile -D
 ```
 
 ## Usage
@@ -28,6 +28,8 @@ This plugin supports the following configuration options:
 1. `include: string | RegExp | readonly (string | RegExp)[] | null`
    Specifies the file paths or file matching patterns that should undergo conditional compilation.
 
+   Default value: `['**/*']`
+
    Example:
 
    ```js
@@ -39,11 +41,13 @@ This plugin supports the following configuration options:
 2. `exclude: string | RegExp | readonly (string | RegExp)[] | null`
    Specifies the file paths or file matching patterns to exclude from conditional compilation.
 
+   Default value: `[/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/]`
+
    Example:
 
    ```js
       {
-         exclude: ['**/node_modules/**']
+         exclude: ['/\.eslintrc.js/']
       }
    ```
 
@@ -63,7 +67,7 @@ This plugin supports the following configuration options:
 
 ## Examples
 
-```javascript
+```jsx
 // vite.config.ts
 import { defineConfig } from "vite";
 import vitePluginConditionalCompile from "vite-plugin-conditional-compile";
@@ -71,6 +75,7 @@ import vitePluginConditionalCompile from "vite-plugin-conditional-compile";
 export default defineConfig({
     plugins: [vitePluginConditionalCompile({
       env:{
+        // Custom environment variables provided for conditional statements
         feature: 'code',
         prod_version: 'vite'
       }
@@ -83,9 +88,11 @@ export default defineConfig({
 // #if [DEV]
 import { featureA } from './featureA.js';
 
+// This import statement will be loaded when the current environment is production, taking the value of PROD from the project's environment variables
 // #elif [PROD]
 import { featureB } from './featureB.js';
 
+// The values of feature and prod_version are taken from the user's env configuration. It checks whether the value of feature is the same as "code" and the value of prod_version is not equal to "vite". When one of these conditions is met, this condition is true.
 // #elif [feature=code || !(prod_version=vite)]
 import { featureC } from './featureC.js';
 
@@ -108,6 +115,8 @@ fetch(import.meta.env.API_URL)
   .then(data => console.log(data));
 // #endif
 
+
+// react jsx
 const Com = () => {
 return (
     <div>
@@ -121,6 +130,39 @@ return (
     </div>
   );
 }
+```
+
+```vue
+<script setup lang="ts">
+// #if [DEV]
+import { featureA } from './featureA.js';
+// #endif
+
+</script>
+
+<template>
+
+  <!-- #if [DEV] -->
+  <router-link to="/debug">
+    <span class="m-2 text-green-500">demo</span>
+  </router-link>
+
+  <!-- #elif [PROD] -->
+ <router-link to="/prod">
+    <span class="m-2 text-green-500">demo</span>
+  </router-link>
+
+  <!-- #else -->
+  <router-link to="/helloWorld">
+    <span class="text-green-500">helloWorld</span>
+  </router-link>
+  <!-- #endif -->
+
+  <router-view />
+</template>
+
+
+
 ```
 
 ## Supported Conditional Statements
