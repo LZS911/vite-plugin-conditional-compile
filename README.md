@@ -1,99 +1,138 @@
-# vite-plugin-conditional-compile
+<h2 align='center'>vite-plugin-conditional-compile</h2>
 
-参考至:  <https://github.com/hzsrc/js-conditional-compile-loader>
+<p align="center">This is a Vite plugin that enables conditional compilation, similar to conditional compilation directives in C/C++.</p>
 
-**该插件加载顺序应在最前位, 防止 jsx 之类的代码被其他插件编译, 导致本插件无法解析**
+English | [简体中文](./README.zh-CN.md) | [1.3.x旧版本](./README.OLD.md)
 
-一个条件编译的 `vite` 插件, 根据不同的项目环境定制不同版本的代码
+# Features
 
-使用方式: 通过一段注释包裹代码, 通过配置来控制是否编译该段代码, 详细见下面示例.
+1. Supports selectively including or excluding code blocks based on custom condition configurations.
+2. Allows using different code logic in development and production environments.
+3. Flexible condition expressions with support for logical operations and environment variables.
+4. Can dynamically generate different output files during the Vite build process.
 
-## Options
+## Installation
 
-name         | default                         | type    |   require        | description
-----         | ----                            | ----    |    ----          | ----
-isDebug      | config.command === 'server'     | boolean |    否             | 是否为开发环境
-changeSource | -                               | (str:string) => string | 否 | 对原代码进行处理的函数
-expand       | -                               | {[key:string]:boolean} | 否 | 键为自定义字符, 用来确定包裹代码的注释(确定方式见示例), 值为bool类型, 当为true时才会编译注释包裹的源代码
-
-## example
-
-`vite.config`
-
-```typescript
-import vitePluginConditionalCompile from 'vite-plugin-conditional-compile';
-
-export default defineConfig((config) => {
-  //...
- plugins: [vitePluginConditionalCompile({})]
-  //...
-}
-
+```ssh
+yarn add  vite-plugin-conditional-compile -D
 ```
 
-`package.json`
+## Usage
 
-```json
-  {
-    "scripts":{
-      "start": "vite",
-      "build": "vite build"
+>Be sure to place this plugin's loading order at the forefront to prevent other plugins from compiling code like jsx, which would cause this plugin to fail to parse.
+
+## Configuration Options
+
+This plugin supports the following configuration options:
+
+1. `include: string | RegExp | readonly (string | RegExp)[] | null`
+   Specifies the file paths or file matching patterns that should undergo conditional compilation.
+
+   Example:
+
+   ```js
+      {
+        include: [/^.+\/packages\/.+\/.+.(ts|tsx)$/],
+      }
+   ```
+
+2. `exclude: string | RegExp | readonly (string | RegExp)[] | null`
+   Specifies the file paths or file matching patterns to exclude from conditional compilation.
+
+   Example:
+
+   ```js
+      {
+         exclude: ['**/node_modules/**']
+      }
+   ```
+
+3. `env: Record<string, any>`
+    Custom environment variable options used in conditional compilation statements with custom environment variables.
+
+    Example:
+
+    ```javascript
+    {
+      'MY_VARIABLE': 'my value',
+      // more env options...
     }
-  }
-```
+    ```
 
-`index.tsx`
+    Additionally, this plugin calls vite's  [loadEnv](https://vitejs.dev/guide/api-javascript.html#loadenv) to retrieve the project's environment variables.
 
-``` typescript
+## Examples
 
-/* IFTRUE_isDebug */
-import from 'doSomething.js'
-/* FITRUE_isDebug */
+```javascript
+// vite.config.ts
+import { defineConfig } from "vite";
+import vitePluginConditionalCompile from "vite-plugin-conditional-compile";
 
-```
+export default defineConfig({
+    plugins: [vitePluginConditionalCompile({
+      env:{
+        feature: 'code',
+        prod_version: 'vite'
+      }
+    }),
+  ],
+});
 
-`index.tsx` 中的这段 `import` 语句只会在开发环境中存在, 不会被打包进生产环境中.
 
-## 拓展项
+// main.jsx
+// #if [DEV]
+import { featureA } from './featureA.js';
 
-`vite.config`
+// #elif [PROD]
+import { featureB } from './featureB.js';
 
-```typescript
-import vitePluginConditionalCompile from 'vite-plugin-conditional-compile';
+// #elif [feature=code || !(prod_version=vite)]
+import { featureC } from './featureC.js';
 
-export default defineConfig((config) => {
-  //...
-const isCoverage = config.mode === 'coverage';
- plugins: [vitePluginConditionalCompile({
-   expand:{
-     isCoverage
-   }
- })]
-  //...
+// #else
+import { featureD } from './featureD.js';
+
+// #endif
+
+// #if [DEV]
+console.log('Development environment');
+// #endif
+
+// #if [PROD]
+console.log('Production environment');
+// #endif
+
+// #if [!!API_URL]
+fetch(import.meta.env.API_URL)
+  .then(response => response.json())
+  .then(data => console.log(data));
+// #endif
+
+const Com = () => {
+return (
+    <div>
+      {/* #if [PROD] */}
+      <span>prod mode</span>
+      {/* #elif [DEV] */}
+      <span>dev mode</span>
+      {/*#else */}
+      <span>unknown mode</span>
+      {/* #endif */}
+    </div>
+  );
 }
-
 ```
 
-`package.json`
+## Supported Conditional Statements
 
-```json
-  {
-    "scripts":{
-      "start": "vite",
-      "build": "vite build",
-      "coverage-build": "npm run build --mode coverage",
-    }
-  }
-```
+>Note: Conditions should be wrapped in square brackets []
 
-`index.tsx`
+1. Equality: `feature=code`、`prod_version=4.5.0` Supports characters and numeric values on the right side of the equation.
+2. Inequality: `prod_version != vite`
+3. Logical statements: `feature=code || !(prod_version=vite)`. Supports nested logical statements.
+4. Variables: `DEV`. checks if the value of env['DEV'] is true.
+5. Negation: `!PROD`. checks if the value of env['PROD'] is false. Double negation can be used to simulate #ifdef.
 
-``` typescript
+## VS Code Extension
 
-/* IFTRUE_isCoverage */
-import from 'doSomething.js'
-/* FITRUE_isCoverage */
-
-```
-
-`index.tsx` 中的这段 `import` 语句将只会在 `mode` 为 `coverage` 的时候存在环境中, 也就是执行 `npm run coverage-build`, 需要保证的是注释中的后半部分内容与 `expand` 中的 `key` 值相对应.
+In the future, there will be support for a VS Code extension that provides features such as syntax highlighting for conditions and syntax validation.
