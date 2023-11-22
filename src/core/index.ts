@@ -28,7 +28,7 @@ class Context {
   }
 
   public set_env(env: Record<string, any>) {
-    this.ctx.env = { ...this.ctx.env, ...env };
+    this.ctx.env = { ...env, ...this.ctx.env };
   }
 
   public resolve_options(userOptions: Options) {
@@ -40,7 +40,6 @@ class Context {
   }
 
   public evaluate_ast(node: ConditionalSupportType): boolean {
-    console.log(node);
     try {
       if (node.type === 'BinaryExpression') {
         const { left, operator, right } = node;
