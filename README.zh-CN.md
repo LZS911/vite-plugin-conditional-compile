@@ -143,6 +143,36 @@ return (
 }
 ```
 
+```vue
+<script setup lang="ts">
+// #if [DEV]
+import { featureA } from './featureA.js';
+// #endif
+
+</script>
+
+<template>
+
+  <!-- #if [DEV] -->
+  <router-link to="/debug">
+    <span class="m-2 text-green-500">demo</span>
+  </router-link>
+
+  <!-- #elif [PROD] -->
+ <router-link to="/prod">
+    <span class="m-2 text-green-500">demo</span>
+  </router-link>
+
+  <!-- #else -->
+  <router-link to="/helloWorld">
+    <span class="text-green-500">helloWorld</span>
+  </router-link>
+  <!-- #endif -->
+
+  <router-view />
+</template>
+```
+
 ## 支持的条件语句
 
 > 注: 条件需要使用 [] 进行包裹

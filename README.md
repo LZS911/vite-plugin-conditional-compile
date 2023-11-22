@@ -160,9 +160,6 @@ import { featureA } from './featureA.js';
 
   <router-view />
 </template>
-
-
-
 ```
 
 ## Supported Conditional Statements
