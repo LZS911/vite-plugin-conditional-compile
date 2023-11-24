@@ -27,7 +27,7 @@ class Context {
     /(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*if\s\[([\w!=&|()'"\s]+)\]\s*(?:\*\/\s*\}?|-->)?([\s\S]+?)(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*endif\s*(?:\*\/\s*\}?|-->)?/g;
 
   public match_group_reg =
-    /.*(#\s*(?:if|elif|else|endif))\s?(?:\[([\w !=&|()'"]*)\])*(?:\s*\*\/\s*\}|\s*-->)?/g;
+    /.*(#\s*(?:if|elif|else|endif))\s?(?:\[([\w !=&|()'"]*)\])*(?:\s*\*\/\s*\}?|\s*-->)?/g;
   constructor(userOptions: Options) {
     this.ctx = userOptions;
   }
@@ -69,7 +69,6 @@ class Context {
           return false;
         }
       }
-
       if (node.type === 'Identifier') {
         return this.ctx.env?.[node.name] === true;
       }
