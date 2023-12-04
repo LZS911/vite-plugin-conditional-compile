@@ -13,7 +13,7 @@ const vitePluginConditionalCompile: (userOptions: Options) => Plugin = (userOpti
         ...config.env,
       });
     },
-    async transform(code, id) {
+    transform(code, id) {
       return ctx.transform(code, id);
     },
   };
