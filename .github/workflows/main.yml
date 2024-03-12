@@ -1,0 +1,21 @@
+name: publish
+
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - run: npm install
+      - run: npm publish
+        env:
+        	# 通过NPM_TOKEN，Github Action才可以直接发布
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
