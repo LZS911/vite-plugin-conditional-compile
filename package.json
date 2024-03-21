@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-conditional-compile",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "license": "MIT",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
@@ -50,7 +50,7 @@
     "vite": "^4.5.0"
   },
   "dependencies": {
-    "@babel/core": "7.15.8"
+    "@babel/core": "7.24.3"
   },
   "peerDependencies": {
     "vite": "^4.5.0"
