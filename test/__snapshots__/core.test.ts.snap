@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test sourceMaps dev mode 1`] = `
+{
+  "file": undefined,
+  "ignoreList": [],
+  "mappings": "AAGA,OAAOA,IAAI,MAAM,MAAM",
+  "names": [
+    "path",
+  ],
+  "sourceRoot": undefined,
+  "sources": [
+    "/src/a.js",
+  ],
+  "sourcesContent": [
+    "
+
+
+import path from 'path'
+
+",
+  ],
+  "version": 3,
+}
+`;

@@ -187,3 +187,47 @@ AAAAAA
  <!-- #endif  -->
 BBBBBBB
 `;
+
+export const mock_js = `
+
+// #if [dev]
+import path from 'path'
+
+// #elif [prod]
+import fs from 'fs'
+// #endif
+
+`;
+
+export const mock_jsx = `
+
+// #if [dev]
+import path from 'path'
+
+// #elif [prod]
+import fs from 'fs'
+// #endif
+
+`;
+
+export const mock_tsx = `
+
+// #if [dev]
+import path from 'path'
+
+// #elif [prod]
+import fs from 'fs'
+// #endif
+
+`;
+
+export const mock_ts = `
+
+// #if [dev]
+import path from 'path'
+
+// #elif [prod]
+import fs from 'fs'
+// #endif
+
+`;

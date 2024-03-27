@@ -12,9 +12,13 @@ const vitePluginConditionalCompile: (userOptions: Options) => Plugin = (userOpti
         ...loadEnv(config.mode ?? process.env.NODE_ENV, process.cwd(), ''),
         ...config.env,
       });
+      ctx.set_root(config.root);
+      ctx.set_enable_source_maps(
+        (config.isProduction && !!config.build.sourcemap) || !config.isProduction,
+      );
     },
     transform(code, id) {
-      return ctx.transform(code, id);
+      return ctx.transformAsync(code, id);
     },
   };
 };
