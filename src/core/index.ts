@@ -1,4 +1,9 @@
-import { parseSync, traverse } from '@babel/core';
+import {
+  parseAsync,
+  traverse,
+  transformAsync as babelTransformAsync,
+  ParserOptions,
+} from '@babel/core';
 import { createFilter } from 'vite';
 import { Options } from '../index.d';
 import { logger } from './logger';
@@ -10,6 +15,17 @@ import {
   UnaryExpression,
   ExpressionStatement,
 } from '@babel/types';
+import replaceAsync from 'string-replace-async';
+
+type SourceMap = {
+  file: string;
+  mappings: string;
+  names: string[];
+  sources: string[];
+  sourcesContent?: string[] | undefined;
+  version: number;
+  toString(): string;
+};
 
 type ConditionalSupportType =
   | BinaryExpression
@@ -21,7 +37,12 @@ type ConditionalSupportType =
 class Context {
   private ctx: Options = {} as Options;
   private code: string = '';
-  private id: string = '';
+  private filepath: string = '';
+  private root: string = '';
+  private enable_source_maps: boolean = false;
+
+  public sourceMapFileNameReg = /\.[tj]sx?$/;
+  private tsReg = /\.tsx?$/;
 
   public pattern_reg =
     /(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*if\s\[([\w!=&|()'"\s]+)\]\s*(?:\*\/\s*\}?|-->)?([\s\S]+?)(?:\/\/|\{?\s*\/\*|<!--)\s*#\s*endif\s*(?:\*\/\s*\}?|-->)?/g;
@@ -34,6 +55,14 @@ class Context {
 
   public set_env(env: Record<string, any>) {
     this.ctx.env = { ...env, ...this.ctx.env };
+  }
+
+  public set_root(root: string) {
+    this.root = root;
+  }
+
+  public set_enable_source_maps(enable: boolean) {
+    this.enable_source_maps = enable;
   }
 
   public resolve_options(userOptions: Options) {
@@ -131,10 +160,10 @@ class Context {
     }
   }
 
-  public resolve_conditional(conditional: string): boolean {
+  public async resolve_conditional_async(conditional: string): Promise<boolean> {
     let res = false;
     try {
-      const ast = parseSync(conditional.replace(/([^=!])=([^=])/g, '$1==$2'));
+      const ast = await parseAsync(conditional.replace(/([^=!])=([^=])/g, '$1==$2'));
       if (!ast) {
         return false;
       }
@@ -147,20 +176,20 @@ class Context {
         },
       });
     } catch (error) {
-      logger.error(`${this.id}: babel parse error: ${error}`);
+      logger.error(`${this.filepath}: babel parse error: ${error}`);
       return false;
     }
     return res;
   }
 
-  public resolve_comment() {
-    return this.code.replace(this.pattern_reg, (matchCode) => {
+  public async resolve_comment_async() {
+    return replaceAsync(this.code, this.pattern_reg, async (matchCode) => {
       const codeBlocks = matchCode.split(this.match_group_reg).filter((v) => v !== '');
       while (codeBlocks.length) {
         const [flag, conditional, block] = codeBlocks.splice(0, 3);
         const real_flag = flag.replace(/\s/g, '');
         if (real_flag === '#if' || real_flag === '#elif') {
-          if (this.resolve_conditional(conditional)) {
+          if (await this.resolve_conditional_async(conditional)) {
             return block;
           }
         } else if (real_flag === '#else') {
@@ -198,17 +227,69 @@ class Context {
     }
   }
 
-  public transform(code: string, id: string) {
+  public async transformAsync(
+    code: string,
+    id: string,
+  ): Promise<{ code?: string; map?: SourceMap | null } | undefined> {
+    if (id.includes('/node_modules/')) return;
+
+    const [filepath] = id.split('?');
+
     this.code = code;
-    this.id = id;
+    this.filepath = filepath;
 
     const options = this.resolve_options({ include: this.ctx.include, exclude: this.ctx.exclude });
     const filter = createFilter(options.include, options.exclude);
-    if (!filter(id)) {
-      return this.deprecated_transform(code);
+    let transformedCode = '';
+    if (!filter(this.filepath)) {
+      transformedCode = this.deprecated_transform(code);
+    } else {
+      transformedCode = this.deprecated_transform(await this.resolve_comment_async());
     }
 
-    return this.deprecated_transform(this.resolve_comment());
+    if (!this.enable_source_maps || !this.sourceMapFileNameReg.test(this.filepath)) {
+      return {
+        code: transformedCode,
+        map: null,
+      };
+    }
+
+    try {
+      const parserPlugins: ParserOptions['plugins'] = [];
+
+      if (!this.filepath.endsWith('.ts')) {
+        parserPlugins.push('jsx');
+      }
+
+      if (this.tsReg.test(this.filepath)) {
+        parserPlugins.push('typescript');
+      }
+      const babelTransformed = await babelTransformAsync(transformedCode, {
+        root: this.root,
+        filename: id,
+        sourceFileName: this.filepath,
+        parserOpts: {
+          sourceType: 'module',
+          allowAwaitOutsideFunction: true,
+          plugins: parserPlugins,
+        },
+        generatorOpts: {
+          decoratorsBeforeExport: true,
+        },
+        sourceMaps: true,
+      });
+
+      return {
+        code: babelTransformed?.code ?? undefined,
+        map: babelTransformed?.map,
+      };
+    } catch (error) {
+      logger.error(`${this.filepath}: generate source maps error: ${error}`);
+      return {
+        code: transformedCode,
+        map: null,
+      };
+    }
   }
 }
 
